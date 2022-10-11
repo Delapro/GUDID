@@ -15,7 +15,8 @@
 Invoke-WebRequest http://www.accessdata.fda.gov/premarket/ftparea/foiclass.zip -OutFile ./foiclass.zip
 "Expand FDI FoiClass"
 Expand-Archive ./foiclass.zip
-dir
+dir|select name
+dir foiclass
 
 $foi=Import-Csv -Path .\foiclass.txt -Delimiter '|'
 $dental = $foi| Where-Object medicalspecialty -eq DE
