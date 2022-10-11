@@ -3,7 +3,7 @@
 
 # Import-Module BitsTransfer  # geht nur unter Windows!
 
-Invoke-WebRequest https://accessgudid.nlm.nih.gov/release_files/download/gudid_full_release_20221001.zip
+Invoke-WebRequest https://accessgudid.nlm.nih.gov/release_files/download/gudid_full_release_20221001.zip -OutFile ./gudid_full_release_20221001.zip
 pwd
 dir
 Expand-Archive ./gudid_full_release_20221001.zip
