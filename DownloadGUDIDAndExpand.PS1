@@ -4,17 +4,18 @@
 # Import-Module BitsTransfer  # geht nur unter Windows!
 
 "Download GUDID Database"
-Invoke-WebRequest https://accessgudid.nlm.nih.gov/release_files/download/gudid_full_release_20221001.zip -OutFile ./gudid_full_release_20221001.zip
+#Invoke-WebRequest https://accessgudid.nlm.nih.gov/release_files/download/gudid_full_release_20221001.zip -OutFile ./gudid_full_release_20221001.zip
 # pwd
 # dir
 "Expand GUDID Database"
-Expand-Archive ./gudid_full_release_20221001.zip
+#Expand-Archive ./gudid_full_release_20221001.zip
 #dir
 #dir ./gudid_full_release_20221001
 "Download FDI FoiClass"
 Invoke-WebRequest http://www.accessdata.fda.gov/premarket/ftparea/foiclass.zip -OutFile ./foiclass.zip
 "Expand FDI FoiClass"
 Expand-Archive ./foiclass.zip
+dir
 
 $foi=Import-Csv -Path .\foiclass.txt -Delimiter '|'
 $dental = $foi| Where-Object medicalspecialty -eq DE
