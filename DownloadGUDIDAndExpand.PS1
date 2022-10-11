@@ -69,7 +69,7 @@ Function Install-StartBitsTransfer {
 	}
 }
 
-Install-StartBitsTransfer
+#Install-StartBitsTransfer
 
-Start-BitsTransfer https://accessgudid.nlm.nih.gov/release_files/download/gudid_full_release_20221001.zip
+Invoke-WebRequest https://accessgudid.nlm.nih.gov/release_files/download/gudid_full_release_20221001.zip
 Expand-Archive gudid_full_release_20221001.zip
