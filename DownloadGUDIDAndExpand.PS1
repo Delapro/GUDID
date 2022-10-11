@@ -7,3 +7,5 @@ Invoke-WebRequest https://accessgudid.nlm.nih.gov/release_files/download/gudid_f
 pwd
 dir
 Expand-Archive ./gudid_full_release_20221001.zip
+dir
+dir ./gudid_full_release_20221001
