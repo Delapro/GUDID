@@ -32,9 +32,11 @@ Function New-DevicesXMLDocument {
 
 cd ./gudid_full_release_20221001
 
+$Slice="Part1*.xml"
+
 $startTime = Get-Date
 # zunächst alle XML-Dateien durchgehen und Dentalprodukte ermitteln, diese werden in eine *-dental.xml-Datei geschrieben
-$files=Get-ChildItem *.xml -Exclude *-dental.xml|Sort-Object name
+$files=Get-ChildItem $Slice -Exclude *-dental.xml|Sort-Object name
 # $x= $files | Select-Object -first 4 | ForEach-Object {
 $x= $files  | ForEach-Object {
         Write-Host "Reading $($_.Fullname)"
