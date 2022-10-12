@@ -30,7 +30,7 @@ Function New-DevicesXMLDocument {
 # nun aus der GUDID-Datenbank die gesuchten Einträge herausholen
 # https://www.fda.gov/medical-devices/global-unique-device-identification-database-gudid/gudid-guidance
 
-cd ./gudid_full_release_20221001
+# cd ./gudid_full_release_20221001
 
 $Slice="*Part$(env:Slice)*.xml"
 "Durchlaufe: $Slice"
