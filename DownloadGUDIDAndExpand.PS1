@@ -32,7 +32,7 @@ Function New-DevicesXMLDocument {
 
 cd ./gudid_full_release_20221001
 
-$Slice="Part1*.xml"
+$Slice="*Part1*.xml"
 
 $startTime = Get-Date
 # zunächst alle XML-Dateien durchgehen und Dentalprodukte ermitteln, diese werden in eine *-dental.xml-Datei geschrieben
