@@ -53,6 +53,6 @@ $x= $files  | ForEach-Object {
         $xr | % { $import=$newxml.ImportNode($_, $true); $devices.AppendChild($import) | Out-Null }
         $newxml.Save($_.FullName.Replace('.xml', '-dental.xml'))
 }
-(Get-Date) - $startTime
+"Verarbeitungszeit: $((Get-Date) - $startTime)"
 $x.Length
 
