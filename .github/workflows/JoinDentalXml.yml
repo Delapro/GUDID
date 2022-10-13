@@ -29,7 +29,7 @@ jobs:
         run: |
           ./JoinDentalXML.PS1
 
-#      - uses: actions/upload-artifact@v3
-#        with:
-#          name: Dental-xml${{ matrix.slice }}
-#          path: ${{ github.workspace }}/gudid_full_release_20221001/*-dental.xml
+      - uses: actions/upload-artifact@v3
+        with:
+          name: Gudid-Dental
+          path: ${{ github.workspace }}/gudid_full_release_20221001/Gudid-Dental.xml
