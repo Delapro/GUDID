@@ -32,7 +32,7 @@ Function New-DevicesXMLDocument {
 
 cd ./gudid_full_release_20221001
 
-$Slice="*Part$($env:Slice)*.xml"
+$Slice="*Part$($env:Slice)?_*.xml"
 "Durchlaufe: $Slice"
 
 $startTime = Get-Date
