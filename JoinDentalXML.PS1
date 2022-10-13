@@ -16,3 +16,14 @@ $x = $files | ForEach-Object {
 (Get-Date) - $startTime   # 2021: dauert ca. 20 Minuten!
 ""
 "Anzahl Dental Devices: $($x.Length)"
+
+"========================"
+$x[0]
+"------------------------"
+$x[-1]
+"========================"
+
+"Export in Gudid-Dental.xml"
+$startTime = Get-Date
+$x |Export-Clixml -Depth 5 ./Gudid-Dental.xml
+(Get-Date) - $startTime
