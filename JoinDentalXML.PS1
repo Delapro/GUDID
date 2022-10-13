@@ -2,9 +2,11 @@ cd ./Dental-xml
 
 Get-ChildItem ./Dental-xml*.zip | % {Expand-Archive $_ -verbose}
 
+# Wichtig: durch das Zippen und jetzt wieder entpacken, liegen die xml-Dateien in einzelnen Unterverzeichnissen!
+
 # nun die *-dental.xml-Dateien in ein gemeinsames Objekt einlesen
 $startTime = Get-Date
-$files=Get-ChildItem *-dental.xml | Sort-Object name
+$files=Get-ChildItem *-dental.xml -recurse | Sort-Object name
 #$x = $files | Select-Object -First 3 | ForEach-Object {
 $x = $files | ForEach-Object {
         $xml = [xml](Get-Content $_.Fullname -encoding UTF8)
