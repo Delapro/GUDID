@@ -1,6 +1,6 @@
 cd ./Dental-xml
 
-Expand-Archive Dental-xml*.zip -verbose
+Expand-Archive ./Dental-xml*.zip -verbose
 
 # nun die *-dental.xml-Dateien in ein gemeinsames Objekt einlesen
 $startTime = Get-Date
