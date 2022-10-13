@@ -1,6 +1,6 @@
 cd ./Dental-xml
 
-Expand-Archive ./Dental-xml*.zip -verbose
+Get-ChildItem ./Dental-xml*.zip | % {Expand-Archive $_ -verbose}
 
 # nun die *-dental.xml-Dateien in ein gemeinsames Objekt einlesen
 $startTime = Get-Date
