@@ -36,3 +36,7 @@ jobs:
         run: |
           ./DownloadGUDIDAndExpand.PS1
 
+      - uses: actions/upload-artifact@v3
+        with:
+          name: Dental-xml${{ matrix.slice }}
+          path: ${{ github.workspace }}/*-dental.xml
