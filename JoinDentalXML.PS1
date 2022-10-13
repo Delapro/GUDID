@@ -1,4 +1,4 @@
-cd ./dental-Xml
+cd ./Dental-xml
 
 Expand-Archive *Dental-xml -verbose
 
