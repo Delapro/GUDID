@@ -54,4 +54,4 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: Dental-xml${{ matrix.slice }}
-          path: ${{ github.workspace }}/gudid_full_release_20221001/*-dental.xml
+          path: ${{ github.workspace }}/gudid_full_release_20231101/*-dental.xml
