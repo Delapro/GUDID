@@ -15,11 +15,11 @@ $x = $files | ForEach-Object {
         Write-Host "$($_.Name) Anzahl: $($xml.devices.device.Count)"
         $xml.devices.device 
 }
-(Get-Date) - $startTime   # 2021: dauert ca. 20 Minuten!
+(Get-Date) - $startTime   # 2021: dauert ca. 20 Minuten! 2023 mit PS7.4: ca. 9 Minuten
 ""
-"Anzahl Dental Devices: $($x.Length)"
+"Anzahl Dental Devices: $($x.Length)"   #2023: 500000 Devices
 
-"========================"
+"======= Beispiel 1. und letztes Device =============="
 $x[0]
 "------------------------"
 $x[-1]
@@ -27,5 +27,7 @@ $x[-1]
 
 "Export in Gudid-Dental.xml"
 $startTime = Get-Date
+"Start-Zeit: $startTime"
 $x |Export-Clixml -Depth 5 ./Gudid-Dental.xml
 (Get-Date) - $startTime
+
