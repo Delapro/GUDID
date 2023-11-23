@@ -31,9 +31,9 @@ $files | ForEach-Object {
 # $x[-1]
 "========================"
 
-"Export in Gudid-Dental.xml"
-$startTime = Get-Date
-"Start-Zeit: $startTime"
-$x |Export-Clixml -Depth 5 ./Gudid-Dental.xml
-(Get-Date) - $startTime
+# "Export in Gudid-Dental.xml"
+# $startTime = Get-Date
+# "Start-Zeit: $startTime"
+# $x |Export-Clixml -Depth 5 ./Gudid-Dental.xml
+# (Get-Date) - $startTime
 
