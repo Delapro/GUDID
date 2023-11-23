@@ -32,8 +32,8 @@ $files | ForEach-Object {
 </devices>
 '@ | Add-Content .\Gudid-Dental.xml
 
-$startTime = Get-Date
-"Start einlesen: $StartTime"
-$x=[xml](Get-Content ./Gudid-Dental.xml)
-(Get-Date) - $startTime
-"Devices: $($x.Length)"
+#$startTime = Get-Date
+#"Start einlesen: $StartTime"
+#$x=[xml](Get-Content ./Gudid-Dental.xml)
+#(Get-Date) - $startTime
+#"Devices: $($x.Length)"
