@@ -34,6 +34,6 @@ $files | ForEach-Object {
 
 $startTime = Get-Date
 "Start einlesen: $StartTime"
-$x=[xml]Get-Content ./Gudid-Dental.xml
+$x=[xml](Get-Content ./Gudid-Dental.xml)
 (Get-Date) - $startTime
 "Devices: $($x.Length)"
