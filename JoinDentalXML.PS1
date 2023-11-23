@@ -10,6 +10,11 @@ $startTime = Get-Date
 $files=Get-ChildItem *-dental.xml -recurse | Sort-Object name
 # $files=Get-Childitem FULLDownload_Part142_Of_144_2022-10-01-dental.xml -recurse
 $index=1
+@'
+<?xml version="1.0" encoding="UTF-8"?>
+<devices>
+'@ | Set-Content .\Gudid-Dental.xml
+
 #$x = $files | Select-Object -First 3 | ForEach-Object {
 $files | ForEach-Object {
         "$($Index). verarbeite: $($_.Name)"
@@ -21,19 +26,8 @@ $files | ForEach-Object {
         # geht nicht: Write-Host "$($_.Name) Anzahl: $($xml.devices.device.Count)"
         # $xml.devices.device 
 }
-# (Get-Date) - $startTime   # 2021: dauert ca. 20 Minuten! 2023 mit PS7.4: ca. 9 Minuten
-""
-# "Anzahl Dental Devices: $($x.Length)"   #2023: 500000 Devices
 
-"======= Beispiel 1. und letztes Device =============="
-# $x[0]
-"------------------------"
-# $x[-1]
-"========================"
+@'
 
-# "Export in Gudid-Dental.xml"
-# $startTime = Get-Date
-# "Start-Zeit: $startTime"
-# $x |Export-Clixml -Depth 5 ./Gudid-Dental.xml
-# (Get-Date) - $startTime
-
+</devices>
+'@ | Add-Content .\Gudid-Dental.xml
