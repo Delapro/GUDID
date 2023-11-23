@@ -13,14 +13,14 @@ $index=1
 @'
 <?xml version="1.0" encoding="UTF-8"?>
 <devices>
-'@ | Set-Content .\Gudid-Dental.xml
+'@ | Set-Content ./Gudid-Dental.xml
 
 #$x = $files | Select-Object -First 3 | ForEach-Object {
 $files | ForEach-Object {
         "$($Index). verarbeite: $($_.Name)"
         $Index++
         $c = (Get-Content $_.Fullname -encoding UTF8)
-        $c[2..($c.length-2)]|Add-content .\Gudid-Dental.xml
+        $c[2..($c.length-2)]|Add-content ./Gudid-Dental.xml
         (Get-Date) - $startTime
         $startTime = Get-Date
         # geht nicht: Write-Host "$($_.Name) Anzahl: $($xml.devices.device.Count)"
@@ -31,3 +31,9 @@ $files | ForEach-Object {
 
 </devices>
 '@ | Add-Content .\Gudid-Dental.xml
+
+$startTime = Get-Date
+"Start einlesen: $StartTime"
+$x=[xml]Get-Content ./Gudid-Dental.xml
+(Get-Date) - $startTime
+"Devices: $($x.Length)"
