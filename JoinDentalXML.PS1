@@ -12,7 +12,8 @@ $files=Get-ChildItem *-dental.xml -recurse | Sort-Object name
 $index=1
 #$x = $files | Select-Object -First 3 | ForEach-Object {
 $files | ForEach-Object {
-        "$($Index++). verarbeite: $($_.Name)"
+        "$($Index). verarbeite: $($_.Name)"
+        $Index++
         $c = (Get-Content $_.Fullname -encoding UTF8)
         $c[2..($c.length-2)]|Add-content .\Gudid-Dental.xml
         (Get-Date) - $startTime
