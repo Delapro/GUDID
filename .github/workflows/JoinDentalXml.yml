@@ -1,4 +1,4 @@
-name: Join Dental-Xml files
+name: 2) Join Dental-Xml files
 
 # Controls when the workflow will run
 on:
