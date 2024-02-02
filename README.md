@@ -12,6 +12,6 @@ Aktuelle Informationen zur GUDID gibt es hier: https://accessgudid.nlm.nih.gov/n
 Die GUDID ist im Gegensatz zur EUDAMED bereits voll im Einsatz und das schon seit Jahren.
 
 ## API
-Die GUDID hat eine offizielle REST-API, welche mittlerweile bereits in Version 2 verfügbar ist. https://accessgudid.nlm.nih.gov/resources/home.
+Die GUDID hat eine offizielle REST-API, welche mittlerweile bereits in Version 3 verfügbar ist. https://accessgudid.nlm.nih.gov/resources/home. Allerdings ist die Basis URL immer noch die V2.
 
 Im Gegensatz zur EUDAMED kann man die GUDID auch komplett herunterladen.
