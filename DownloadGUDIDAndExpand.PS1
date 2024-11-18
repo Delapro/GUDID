@@ -4,9 +4,9 @@
 # Import-Module BitsTransfer  # geht nur unter Windows!
 
 "Download GUDID Database"
-Invoke-WebRequest https://accessgudid.nlm.nih.gov/release_files/download/gudid_full_release_20231101.zip -OutFile ./gudid_full_release_20231101.zip
+Invoke-WebRequest https://accessgudid.nlm.nih.gov/release_files/download/gudid_full_release_20241101.zip -OutFile ./gudid_full_release_20241101.zip
 "Expand GUDID Database"
-Expand-Archive ./gudid_full_release_20231101.zip
+Expand-Archive ./gudid_full_release_20241101.zip
 "Download FDI FoiClass"
 Invoke-WebRequest http://www.accessdata.fda.gov/premarket/ftparea/foiclass.zip -OutFile ./foiclass.zip
 "Expand FDI FoiClass"
@@ -30,7 +30,7 @@ Function New-DevicesXMLDocument {
 # nun aus der GUDID-Datenbank die gesuchten Einträge herausholen
 # https://www.fda.gov/medical-devices/global-unique-device-identification-database-gudid/gudid-guidance
 
-cd ./gudid_full_release_20231101
+cd ./gudid_full_release_20241101
 
 $Slice="*Part$($env:Slice)?_*.xml"
 "Durchlaufe: $Slice"
