@@ -9,7 +9,7 @@ $name=$res.rss.channel.Item.title.replace('.zip','')
 
 "Download GUDID Database"
 Invoke-WebRequest "https://accessgudid.nlm.nih.gov/release_files/download/$($Name).zip" -OutFile "./$($Name).zip"
-"Expand GUDID Database"
+"Expand GUDID Database $Name"
 Expand-Archive "./$($Name).zip"
 "Download FDI FoiClass"
 Invoke-WebRequest http://www.accessdata.fda.gov/premarket/ftparea/foiclass.zip -OutFile ./foiclass.zip
