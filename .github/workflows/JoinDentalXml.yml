@@ -21,7 +21,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Upgrade to latest powershell on Linux
         run: |
@@ -45,7 +45,7 @@ jobs:
           # Die nötigen Dateien müssen zuerst ins Dental-xml Verzeichnis im Repository hochgeladen worden sein!!
           ./JoinDentalXML.PS1
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: Gudid-Dental
           path: ${{ github.workspace }}/Dental-xml/Gudid-Dental.xml
