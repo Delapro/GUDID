@@ -1,4 +1,22 @@
 # GUDID downloaden
+# TODO Artefakte nicht hochladen, sondern direkt mittels
+# git config --global user.name 'My Name'
+# git config --global user.email 'my-name@gmail.com'
+# git add
+# git commit
+# git push
+# direkt ins Repository hochladen
+# oder direkt in YAML:
+#    - name: git
+#      run: |
+#        # setup the username and email. I tend to use 'GitHub Actions Bot' with no email by default
+#        git --version
+#        git config user.name "GitHub Actions Bot"
+#        git config user.email "<>"
+#        git status
+#        git tag
+#        git describe
+# usw.
 
 # Import-Module BitsTransfer  # geht nur unter Windows!
 
