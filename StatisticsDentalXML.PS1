@@ -157,7 +157,7 @@ $h=$x| group companyName | measure -Property Count -Sum
 "Hersteller: $($h.Count), mit insgesamt $($h.Sum) Produkten"
 
 "Hersteller ausgeben"
-$x | group companyname | select Name
+$x | group companyname | select Name | select -first 5
 
 "Ausgabe der Produktcodes"
 $p= $x | select *, @{N='ProdCode';E={$_.productCodes.fdaProductCode.productCode}} | group -Property ProdCode
