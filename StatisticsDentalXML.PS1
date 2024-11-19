@@ -1,3 +1,7 @@
+"Download FDI FoiClass"
+Invoke-WebRequest http://www.accessdata.fda.gov/premarket/ftparea/foiclass.zip -OutFile ./foiclass.zip
+"Expand FDI FoiClass"
+Expand-Archive ./foiclass.zip
 # https://www.fda.gov/medical-devices/classify-your-medical-device/download-product-code-classification-files
 # http://www.accessdata.fda.gov/premarket/ftparea/foiclass.zip
 $foi=Import-Csv -Path .\foiclass.txt -Delimiter '|'
