@@ -3,11 +3,9 @@ Invoke-WebRequest http://www.accessdata.fda.gov/premarket/ftparea/foiclass.zip -
 "Expand FDI FoiClass"
 Expand-Archive ./foiclass.zip -Verbose
 
-dir
-
 # https://www.fda.gov/medical-devices/classify-your-medical-device/download-product-code-classification-files
 # http://www.accessdata.fda.gov/premarket/ftparea/foiclass.zip
-$foi=Import-Csv -Path ./foiclass.txt -Delimiter '|'
+$foi=Import-Csv -Path ./foiclass/foiclass.txt -Delimiter '|'
 $dental = $foi| Where-Object medicalspecialty -eq DE
 $deProdCode = $dental | Select-Object -ExpandProperty ProductCode
 $deProdCodeAnzahl = $deProdCode.Length
