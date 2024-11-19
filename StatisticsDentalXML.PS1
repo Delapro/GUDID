@@ -125,7 +125,7 @@ $gs1|? {($_.lotbatch -eq $true) -and ($_.serialnumber -eq $true)} | select compa
 
 "um die DIs einer gs1 Firma zu erhalten:"
 $gs1Company=$gs1| group -Property CompanyName
-($gs1Company| where name -match straumann| select -ExpandProperty group).identifiers.identifier
+($gs1Company| where name -match straumann| select -ExpandProperty group).identifiers.identifier | select -first 5
 
 
 "nicht mehr im Vertrieb"
