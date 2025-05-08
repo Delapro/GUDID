@@ -52,6 +52,7 @@ jobs:
           ./DownloadGUDIDAndExpand.PS1
           ls -l ../.
           Copy *Dental.xml ./../Dental-xml -Verbose
+          # Quelle für git Operationen: https://github.com/actions/checkout?tab=readme-ov-file#push-a-commit-using-the-built-in-token
           # Note: the following account information will not work on GHES
           # Versuch die erzeugten Dateien gleich hochzuladen
           git config user.name "github-actions[bot]"
