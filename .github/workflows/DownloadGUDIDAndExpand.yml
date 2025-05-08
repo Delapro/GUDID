@@ -50,9 +50,18 @@ jobs:
         shell: pwsh
         run: |
           ./DownloadGUDIDAndExpand.PS1
-
+          Copy *Dental.xml .\Dental-xml -Verbose
+          # Note: the following account information will not work on GHES
+          # Versuch die erzeugten Dateien gleich hochzuladen
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          cd ./Dental-xml
+          git add .
+          git commit -m "Generated Block ${{ matrix.slice }}"
+          git push
+          
       - uses: actions/upload-artifact@v4
         with:
           name: Dental-xml${{ matrix.slice }}
-          # TODO: Datum automatisch ermitteln aus https://accessgudid.nlm.nih.gov/download.rss?files=full
+          # TODO: Datum 20250501 automatisch ermitteln aus https://accessgudid.nlm.nih.gov/download.rss?files=full
           path: ${{ github.workspace }}/gudid_full_release_20250501/*-dental.xml
