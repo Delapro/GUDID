@@ -50,8 +50,8 @@ jobs:
         shell: pwsh
         run: |
           ./DownloadGUDIDAndExpand.PS1
-          ls -l
-          Copy *Dental.xml .\Dental-xml -Verbose
+          ls -l ../.
+          Copy *Dental.xml ./../Dental-xml -Verbose
           # Note: the following account information will not work on GHES
           # Versuch die erzeugten Dateien gleich hochzuladen
           git config user.name "github-actions[bot]"
