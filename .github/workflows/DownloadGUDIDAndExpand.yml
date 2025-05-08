@@ -56,7 +56,7 @@ jobs:
           # Versuch die erzeugten Dateien gleich hochzuladen
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"          
-          git add .
+          git add ./Dental-xml/
           git commit -m "Generated Block ${{ matrix.slice }}"
           git push
           
