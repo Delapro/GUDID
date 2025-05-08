@@ -98,30 +98,30 @@ $x|where catalognumber -eq '66017316'
 "GS1 Barcodes"
 $gs1=$x|? {$_.identifiers.identifier.deviceIdIssuingAgency -eq 'GS1'}
 $gs1 | measure
-# Count             : 2021: 241578    2020: 175529
+# Count             : 2025: 539013    2021: 241578    2020: 175529   
 
 # ungültige DI mit falscher Checksumme!
 $gs1Prob=$x|? {$_.identifiers.identifier.deviceIdIssuingAgency -eq 'GS1' -and $_.identifiers.identifier.deviceIdType -eq 'Primary' -and $_.identifiers.identifier -isnot [array] -and  (-not (Test-GS1Checksum $_.identifiers.identifier.deviceID)) }
 
 "HIBC Barcodes"
 $x|? {$_.identifiers.identifier.deviceIdIssuingAgency -eq 'HIBCC'} | measure
-# Count             : 2021: 184509     2020: 167147
+# Count             : 2025: 296126    2021: 184509     2020: 167147
 
 "Verpackungen"
 $x|? {$_.identifiers.identifier.deviceIdType -eq 'Package'} | measure
-# Count             : 7248
+# Count             : 2025: 31412    7248
 
 "reale Produkte"
 $x|? {$_.identifiers.identifier.deviceIdType -eq 'Primary'} | measure
-# Count             : 336427
+# Count             : 2025: 812322    336427
 
 "GS1-Produkte mit Lot und Seriennummer"
 $gs1|? {($_.lotbatch -eq $true) -and ($_.serialnumber -eq $true)} | measure
-# Count             : 2021: 22636    2020: 19443
+# Count             : 2025: 62063     2021: 22636    2020: 19443
 
 "GS1-Hersteller mit Lot und Seriennummer"
 $gs1|? {($_.lotbatch -eq $true) -and ($_.serialnumber -eq $true)} | select companyname -Unique|measure
-# Count             : 2021: 105       2020: 79
+# Count             : 2025: 199     2021: 105       2020: 79
 
 "um die DIs einer gs1 Firma zu erhalten:"
 $gs1Company=$gs1| group -Property CompanyName
@@ -130,31 +130,32 @@ $gs1Company=$gs1| group -Property CompanyName
 
 "nicht mehr im Vertrieb"
 $x| ? deviceCommDistributionStatus -ne 'In Commercial Distribution'|measure
-# Count             : 11504
+# Count             : 2025: 76376     11504
 
 "Produkte mit mehr 1 Identifier"
 $x|? {$_.identifiers.identifier.count -gt 1 }| measure
-# Count             : 61825
+# Count             : 2025: 187043    61825
 
 "Produkte mit mehr 2 Identifier"
 $x|? {$_.identifiers.identifier.count -gt 2 }| measure
-# Count             : 4565
+# Count             : 2025: 11750      4565
 
 "Produkte mit mehr 3 Identifier"
 $x|? {$_.identifiers.identifier.count -gt 3 }| measure
-# Count             : 117
+# Count             : 2025: 797       117
 
 "Produkte mit mehr 4 Identifier"
 $x|? {$_.identifiers.identifier.count -gt 4 }| measure
-# Count             : 21
+# Count             : 2025: 78        21
 
 "Produkte mit mehr 5 Identifier"
 $x|? {$_.identifiers.identifier.count -gt 5 }| measure
-# Count             : 13
+# Count             : 2025: 33        13
 
 
 $h=$x| group companyName | measure -Property Count -Sum
 "Hersteller: $($h.Count), mit insgesamt $($h.Sum) Produkten"
+# 2025: Hersteller: 1361, mit insgesamt 812322 Produkten
 
 "Hersteller ausgeben"
 $x | group companyname | select Name | select -first 5
