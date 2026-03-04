@@ -10,7 +10,20 @@ on:
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+    inputs:
+      source_workflow:
+        description: "Workflow-Datei, aus der die Artefakte kommen: DownloadGUDIDAndExpand.yml"
+        required: true
+        default: "DownloadGUDIDAndExpand.yml"
+      artifact_pattern:
+        description: "Glob/Pattern für Artefakt-Namen"
+        required: true
+        default: "Dental-xml*"  
 
+permissions:
+  actions: read
+  contents: read
+  
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
@@ -39,6 +52,40 @@ jobs:
           # Create the symbolic link that points to pwsh
           # sudo ln -s /opt/microsoft/powershell/7/pwsh /usr/bin/pwsh
 
+      - name: Find latest successful run of source workflow on this branch
+        id: findrun
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $workflow = "${{ inputs.source_workflow }}"
+          $branch   = "${{ github.ref_name }}"
+          # Letzten erfolgreichen Run dieses Workflows auf diesem Branch finden
+          $runs = gh run list `
+            --workflow $workflow `
+            --branch $branch `
+            --status success `
+            --limit 1 `
+            --json databaseId,headSha,conclusion | ConvertFrom-Json
+          if (-not $runs -or -not $runs[0].databaseId) {
+            throw "Kein erfolgreicher Run gefunden für workflow='$workflow' auf branch='$branch'."
+          }
+          "run_id=$($runs[0].databaseId)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "sha=$($runs[0].headSha)"      | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - name: Download matching artifacts (keine Namenskollisionen, je Artefakt eigener Ordner)
+        uses: actions/download-artifact@v5
+        with:
+          run-id: ${{ steps.findrun.outputs.run_id }}
+          pattern: ${{ inputs.artifact_pattern }}
+          merge-multiple: true  # alle Artefakte in ein Verzeichnis
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Show what we got
+        run: |
+          echo "Source run: ${{ steps.findrun.outputs.run_id }} (SHA: ${{ steps.findrun.outputs.sha }})"
+          find . -maxdepth 2 -type f | sed -n '1,200p'
+          
       # Runs a set of commands using the runners shell
       - name: Joining xml files
         shell: pwsh
