@@ -79,3 +79,30 @@ $x= $files  | ForEach-Object {
 "Verarbeitungszeit: $((Get-Date) - $startTime)"
 $x.Length
 
+# Datum ermitteln
+Function Get-FullReleaseDate {
+    param(
+        [string]$Url = "https://accessgudid.nlm.nih.gov/download.rss?files=full"
+    )
+
+    # RSS laden
+    $response = Invoke-WebRequest -Uri $Url -UseBasicParsing
+
+    # XML parsen
+    [xml]$rss = $response.Content
+
+    # Titel des ersten Items holen
+    $title = $rss.rss.channel.item.title
+
+    # Datum extrahieren (Format: gudid_full_release_YYYYMMDD.zip)
+    if ($title -match 'gudid_full_release_(\d{8})\.zip') {
+        return $matches[1]
+    }
+    else {
+        throw "Kein Datum im Titel gefunden: $title"
+    }
+}
+
+# für Github Action exportieren
+$date = Get-FullReleaseDate
+"release_date=$date" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
