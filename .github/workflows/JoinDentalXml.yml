@@ -78,6 +78,7 @@ jobs:
         with:
           run-id: ${{ steps.findrun.outputs.run_id }}
           pattern: ${{ inputs.artifact_pattern }}
+          path: Dental-xml-Artefakt
           merge-multiple: true  # alle Artefakte in ein Verzeichnis
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
