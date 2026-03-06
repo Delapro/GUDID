@@ -97,5 +97,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: Gudid-Dental
-          path: ${{ github.workspace }}/Dental-xml/Gudid-Dental.xml
+          path: ${{ github.workspace }}/Dental-xml-Artefakt/Gudid-Dental.xml
           
