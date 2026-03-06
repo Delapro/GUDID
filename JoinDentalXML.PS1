@@ -1,4 +1,5 @@
-cd ./Dental-xml
+#cd ./Dental-xml
+cd ./Dental-xml-Artefakt
 
 Get-ChildItem ./Dental-xml*.zip | % {Expand-Archive $_ -verbose}
 
