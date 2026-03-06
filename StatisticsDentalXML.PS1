@@ -1,5 +1,5 @@
 "Download FDI FoiClass"
-Invoke-WebRequest http://www.accessdata.fda.gov/premarket/ftparea/foiclass.zip -OutFile ./foiclass.zip
+Start-BitsTransfer http://www.accessdata.fda.gov/premarket/ftparea/foiclass.zip # -OutFile ./foiclass.zip
 "Expand FDI FoiClass"
 Expand-Archive ./foiclass.zip -Verbose
 
