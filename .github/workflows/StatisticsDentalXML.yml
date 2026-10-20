@@ -2,21 +2,29 @@ name: 3) Statistics Dental-Xml files
 
 on:
   workflow_dispatch:
-
+  workflow_run:
+    workflows: ["2) Join Dental-Xml files"]
+    types: [completed]
+    branches: [main]
+    
 permissions:
   contents: read
   actions: read
 
 jobs:
   build:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
       - name: Find latest successful Join run
         id: findrun
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
