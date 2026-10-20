@@ -38,7 +38,7 @@ function Get-ChildText {
 
 function Test-GS1Checksum {
     param([string] $GTIN)
-    if ([string]::IsNullOrWhiteSpace($GTIN) -or $GTIN -notmatch '^\d+$') { return $false }
+    if ([string]::IsNullOrWhiteSpace($GTIN) -or $GTIN -cnotmatch '^[0-9]+$') { return $false }
     $sum = 0
     $multiplyByThree = $false
     for ($i = $GTIN.Length - 1; $i -ge 0; $i--) {
@@ -47,6 +47,35 @@ function Test-GS1Checksum {
         $multiplyByThree = -not $multiplyByThree
     }
     return ($sum % 10 -eq 0)
+}
+
+
+# Unabhaengige Berechnung der SOLL-Pruefziffer aus dem Datenanteil
+# (von rechts im Nutzdatenanteil beginnend: 3, 1, 3, 1, ...).
+function Get-GS1ExpectedCheckDigit {
+    param([string] $Payload)
+    if ([string]::IsNullOrEmpty($Payload) -or $Payload -cnotmatch '^[0-9]+$') { return '' }
+    $sum = 0
+    $factor = 3
+    for ($i = $Payload.Length - 1; $i -ge 0; $i--) {
+        $sum += ([int]::Parse($Payload.Substring($i, 1)) * $factor)
+        if ($factor -eq 3) { $factor = 1 } else { $factor = 3 }
+    }
+    return [string]((10 - ($sum % 10)) % 10)
+}
+
+# Selbsttest gegen bekannte korrekte und inkorrekte GTINs.
+foreach ($sample in @('4006381333931', '07640173184379', '04571269943255')) {
+    if (-not (Test-GS1Checksum $sample)) {
+        throw "GS1-Selbsttest fehlgeschlagen: $sample wurde als ungueltig erkannt."
+    }
+    if ((Get-GS1ExpectedCheckDigit ($sample.Substring(0, $sample.Length - 1))) -ne
+        $sample.Substring($sample.Length - 1)) {
+        throw "GS1-Selbsttest fehlgeschlagen: falsche errechnete Pruefziffer fuer $sample."
+    }
+}
+if (Test-GS1Checksum '4006381333932') {
+    throw 'GS1-Selbsttest fehlgeschlagen: falsche Pruefziffer akzeptiert.'
 }
 
 function Write-CsvLine {
@@ -66,6 +95,12 @@ $stat = [ordered]@{
     Primary = 0
     GS1LotSerial = 0
     GS1BadChecksumPrimarySingle = 0
+    GS1InvalidLengthPrimarySingle = 0
+    GS1InvalidCharsPrimarySingle = 0
+    BothGS1HIBC = 0
+    OnlyGS1 = 0
+    OnlyHIBC = 0
+    NeitherGS1NorHIBC = 0
     NotCommercial = 0
     More1 = 0
     More2 = 0
@@ -87,9 +122,17 @@ $startTime = Get-Date
 $utf8 = [System.Text.UTF8Encoding]::new($true)
 $teethWriter = [System.IO.StreamWriter]::new((Join-Path $outDir 'Zaehne-ELM.csv'), $false, $utf8)
 $vitaWriter  = [System.IO.StreamWriter]::new((Join-Path $outDir 'Zaehne-VITA.csv'), $false, $utf8)
+$gs1Writer = [System.IO.StreamWriter]::new((Join-Path $outDir 'GS1-DI-Auffaelligkeiten.csv'), $false, $utf8)
 try {
     Write-CsvLine $teethWriter @('CompanyName','BrandName','DeviceDescription','CatalogNumber')
     Write-CsvLine $vitaWriter  @('CompanyName','BrandName','DeviceDescription','CatalogNumber')
+    Write-CsvLine $gs1Writer @(
+        'DeviceId','Problem','GTINLength','ExpectedCheckDigit','ActualCheckDigit',
+        'CompanyName','BrandName','VersionModelNumber','CatalogNumber',
+        'DevicePublishDate','YearsSincePublication','PublicVersionDate',
+        'DistributionStatus','DistributionEndDate','DeviceRecordStatus',
+        'PublicDeviceRecordKey','FDAProductCodes','InspectionDateUTC'
+    )
 
     foreach ($file in $files) {
         "Auswerten: $($file.Name) ($([math]::Round($file.Length / 1MB)) MB)"
@@ -151,8 +194,57 @@ try {
                         if ($type -eq 'Package') { $hasPackage = $true }
                         if ($type -eq 'Primary') { $hasPrimary = $true }
                         if ($ids.Count -eq 1 -and $agency -eq 'GS1' -and $type -eq 'Primary') {
-                            if (-not (Test-GS1Checksum (Get-ChildText $id "./${prefix}deviceId" $ns))) {
-                                $stat.GS1BadChecksumPrimarySingle++
+                            $di = Get-ChildText $id "./${prefix}deviceId" $ns
+                            $digitsOnly = ($di -cmatch '^[0-9]+$')
+                            $lengthOk = ($di.Length -in @(8, 12, 13, 14))
+                            $checksumOk = Test-GS1Checksum $di
+
+                            if (-not $checksumOk) { $stat.GS1BadChecksumPrimarySingle++ }
+                            if (-not $digitsOnly) { $stat.GS1InvalidCharsPrimarySingle++ }
+                            if (-not $lengthOk) { $stat.GS1InvalidLengthPrimarySingle++ }
+
+                            # Schreibe alle auffaelligen DIs auf Platte. Keine GTIN
+                            # stillschweigend trimmen oder fuehrende Nullen entfernen.
+                            if (-not $checksumOk -or -not $lengthOk) {
+                                $problem = if (-not $digitsOnly) { 'NotNumeric' }
+                                           elseif (-not $lengthOk -and $checksumOk) { 'UnusualGTINLength' }
+                                           elseif (-not $lengthOk) { 'BadChecksumAndLength' }
+                                           else { 'BadCheckDigit' }
+                                $expected = ''
+                                $actual = ''
+                                if ($digitsOnly -and $di.Length -ge 2) {
+                                    $expected = Get-GS1ExpectedCheckDigit ($di.Substring(0, $di.Length - 1))
+                                    $actual = $di.Substring($di.Length - 1)
+                                }
+                                $pubDate = Get-ChildText $device "./${prefix}devicePublishDate" $ns
+                                $ageYears = ''
+                                if ($pubDate -match '^\d{4}-\d{2}-\d{2}$') {
+                                    try {
+                                        $published = [datetime]::ParseExact(
+                                            $pubDate, 'yyyy-MM-dd',
+                                            [System.Globalization.CultureInfo]::InvariantCulture)
+                                        $ageYears = [math]::Round(
+                                            ([datetime]::UtcNow.Date - $published).TotalDays / 365.2425, 1)
+                                    } catch { $ageYears = '' }
+                                }
+                                $fdaCodes = @($device.SelectNodes(
+                                    "./${prefix}productCodes/${prefix}fdaProductCode/${prefix}productCode", $ns) |
+                                    ForEach-Object { $_.InnerText.Trim() }) -join ';'
+                                Write-CsvLine $gs1Writer @(
+                                    $di, $problem, $di.Length, $expected, $actual,
+                                    $company,
+                                    (Get-ChildText $device "./${prefix}brandName" $ns),
+                                    (Get-ChildText $device "./${prefix}versionModelNumber" $ns),
+                                    (Get-ChildText $device "./${prefix}catalogNumber" $ns),
+                                    $pubDate, $ageYears,
+                                    (Get-ChildText $device "./${prefix}publicVersionDate" $ns),
+                                    $distributionStatus,
+                                    (Get-ChildText $device "./${prefix}deviceCommDistributionEndDate" $ns),
+                                    (Get-ChildText $device "./${prefix}deviceRecordStatus" $ns),
+                                    (Get-ChildText $device "./${prefix}publicDeviceRecordKey" $ns),
+                                    $fdaCodes, [datetime]::UtcNow.ToString('yyyy-MM-dd')
+                                )
+                                Write-Host "GS1 DI auffaellig: $di [$problem] Firma='$company'; Vertrieb='$distributionStatus'; Publish='$pubDate'"
                             }
                         }
                         if ($agency -eq 'GS1' -and $company -match 'straumann' -and $straumannIds.Count -lt 5) {
@@ -161,6 +253,10 @@ try {
                     }
                     if ($hasGs1) { $stat.GS1++ }
                     if ($hasHibc) { $stat.HIBC++ }
+                    if ($hasGs1 -and $hasHibc) { $stat.BothGS1HIBC++ }
+                    elseif ($hasGs1) { $stat.OnlyGS1++ }
+                    elseif ($hasHibc) { $stat.OnlyHIBC++ }
+                    else { $stat.NeitherGS1NorHIBC++ }
                     if ($hasPackage) { $stat.Packaging++ }
                     if ($hasPrimary) { $stat.Primary++ }
 
@@ -225,6 +321,7 @@ try {
 finally {
     $teethWriter.Dispose()
     $vitaWriter.Dispose()
+    $gs1Writer.Dispose()
 }
 if ($stat.Total -eq 0) { throw 'Keine <device>-Elemente gefunden!' }
 
@@ -232,7 +329,14 @@ if ($stat.Total -eq 0) { throw 'Keine <device>-Elemente gefunden!' }
 "Anzahl: $($stat.Total)"
 "GS1 Barcodes: $($stat.GS1)"
 "GS1-DI mit fehlerhafter Pruefsumme (nur einzeln und Primary): $($stat.GS1BadChecksumPrimarySingle)"
+"GS1-DI mit nicht numerischen Zeichen (nur einzeln und Primary): $($stat.GS1InvalidCharsPrimarySingle)"
+"GS1-DI mit ungewoehnlicher Laenge (nur einzeln und Primary): $($stat.GS1InvalidLengthPrimarySingle)"
+"GS1-DI-Details: Statistics-Output/GS1-DI-Auffaelligkeiten.csv"
 "HIBC Barcodes: $($stat.HIBC)"
+"GS1 und HIBC (beide): $($stat.BothGS1HIBC)"
+"Nur GS1: $($stat.OnlyGS1)"
+"Nur HIBC: $($stat.OnlyHIBC)"
+"Weder GS1 noch HIBC: $($stat.NeitherGS1NorHIBC)"
 "Verpackungen: $($stat.Packaging)"
 "Reale Produkte: $($stat.Primary)"
 "GS1-Produkte mit Lot und Seriennummer: $($stat.GS1LotSerial)"
@@ -288,7 +392,6 @@ try {
     }
 }
 finally { $gmdnWriter.Dispose() }
-
 
 "Unterschiedliche GMDN-Terme: $($gmdnCounts.Count)"
 
