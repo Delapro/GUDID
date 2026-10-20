@@ -69,15 +69,20 @@ Function Test-HIBCChecksum {
   $HIBC[-1] -eq (New-HIBCChecksum ($HIBC[0..($HIBC.Length-2)] -join ''))
 }
 
-"Entpacken"
-cd ./Dental-xml
-Get-ChildItem ./Dental-xml*.zip | % {Expand-Archive $_ -verbose}
-
+"XML-Datei aus Join-Artefakt einlesen"
+Set-Location ./Dental-xml-Artefakt
+$xmlFile = './Gudid-Dental.xml'
+if (-not (Test-Path $xmlFile -PathType Leaf)) {
+  throw "Fehler: Gudid-Dental.xml wurde nicht gefunden!"
+}
 "Auswerten"
-# nun die *-dental.xml-Dateien in ein gemeinsames Objekt einlesen
 $startTime = Get-Date
-
-$files=Get-ChildItem *-dental.xml -recurse | Sort-Object name
+$files = @(
+    Get-ChildItem -Path './Dental-xml-Artefakt' `
+        -Filter '*-dental.xml' `
+        -File -Recurse |
+    Sort-Object Name
+)
 $index=1
 
 $x = $files | ForEach-Object {
