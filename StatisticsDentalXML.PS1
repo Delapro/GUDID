@@ -79,14 +79,48 @@ $xmlFile = './Gudid-Dental.xml'
 if (-not (Test-Path $xmlFile -PathType Leaf)) {
   throw "Fehler: Gudid-Dental.xml wurde nicht gefunden!"
 }
-"Auswerten"
-$startTime = Get-Date
+
+
+"XML-Datei aus Join-Artefakt einlesen"
+
+# Absoluter Pfad relativ zum Skript
+$xmlDir = Join-Path $PSScriptRoot 'Dental-xml-Artefakt'
+
+if (-not (Test-Path -LiteralPath $xmlDir -PathType Container)) {
+    throw "Verzeichnis nicht gefunden: $xmlDir"
+}
+
+# XML-Dateien suchen und alphabetisch sortieren
 $files = @(
-    Get-ChildItem -Path './Dental-xml-Artefakt' `
-        -Filter '*-dental.xml' `
-        -File -Recurse |
+    Get-ChildItem -LiteralPath $xmlDir -File -Recurse |
+    Where-Object { $_.Name -like '*-dental.xml' } |
     Sort-Object Name
 )
+
+Write-Host "Gefundene XML-Dateien: $($files.Count)"
+
+if ($files.Count -eq 0) {
+    Get-ChildItem -LiteralPath $xmlDir -Recurse |
+        Select-Object -ExpandProperty FullName |
+        Out-Host
+    throw "Keine passenden Dental-XML-Dateien gefunden!"
+}
+
+"Auswerten"
+$startTime = Get-Date
+$x = @(
+    $files | ForEach-Object {
+        $xml = [xml](Get-Content -LiteralPath $_.FullName -Raw -Encoding UTF8)
+        Write-Host "$($_.Name) Anzahl: $($xml.devices.device.Count)"
+        $xml.devices.device
+    }
+)
+(Get-Date) - $startTime
+if ($x.Count -eq 0) {
+    throw "Keine Geräte aus den XML-Dateien eingelesen!"
+}
+"Anzahl: $($x.Count)"
+
 $index=1
 
 $x = $files | ForEach-Object {
@@ -201,4 +235,7 @@ $Zahn=$Zähne|where catalognumber -eq '66017316'
 $gmdn=$Zähne| select @{N='GMDN';E={$_.gmdnTerms.gmdn.gmdnPTName}} -Unique
 
 $fmlist=$x| select @{N='FDA';E={$_.productCodes.fdaProductCode.productCode}},@{N='GMDN';E={$_.gmdnTerms.gmdn.gmdnPTName}}
-$fmlist|group gmdn|select count, name|sort count
+$fmlist |
+    Group-Object GMDN |
+    Select-Object Count, Name |
+    Sort-Object Count
