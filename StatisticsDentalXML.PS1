@@ -1,4 +1,4 @@
-# StatisticsDentalXML_Streaming.ps1
+# StatisticsDentalXML.PS1 - Streaming, namespace-sichere Fassung
 # Ersatz für StatisticsDentalXML.PS1: verarbeitet die von Join erstellte XML
 # geräteweise statt die gesamte Datei in $x zu laden.
 # PowerShell 7 unter Linux / Windows.
@@ -26,8 +26,12 @@ $files = @(Get-ChildItem -LiteralPath $xmlDir -Recurse -File |
 if ($files.Count -eq 0) { throw "Keine *-dental.xml unter $xmlDir gefunden" }
 
 function Get-ChildText {
-    param([System.Xml.XmlNode] $Parent, [string] $XPath)
-    $node = $Parent.SelectSingleNode($XPath)
+    param(
+        [System.Xml.XmlNode] $Parent,
+        [string] $XPath,
+        [System.Xml.XmlNamespaceManager] $Namespaces
+    )
+    $node = $Parent.SelectSingleNode($XPath, $Namespaces)
     if ($null -eq $node) { return '' }
     return $node.InnerText
 }
@@ -103,32 +107,56 @@ try {
                     $reader.LocalName -eq 'device') {
                     $fragment = $reader.ReadOuterXml()
                     $device = ([xml]$fragment).DocumentElement
+
+                    # GUDID verwendet normalerweise den Default-Namespace
+                    # http://www.fda.gov/cdrh/gudid. Ein XPath ohne Prefix
+                    # findet diese Elemente NICHT.
+                    $ns = [System.Xml.XmlNamespaceManager]::new($device.OwnerDocument.NameTable)
+                    $prefix = ''
+                    if (-not [string]::IsNullOrEmpty($device.NamespaceURI)) {
+                        $ns.AddNamespace('g', $device.NamespaceURI)
+                        $prefix = 'g:'
+                    }
+
                     $stat.Total++
                     $fileTotal++
 
-                    $company = Get-ChildText $device './companyName'
+                    $company = Get-ChildText $device "./${prefix}companyName" $ns
                     if (-not $manufacturers.ContainsKey($company)) { $manufacturers[$company] = 0 }
                     $manufacturers[$company]++
 
-                    $ids = @($device.SelectNodes('./identifiers/identifier'))
+                    $ids = @($device.SelectNodes("./${prefix}identifiers/${prefix}identifier", $ns))
+                    $distributionStatus = Get-ChildText $device "./${prefix}deviceCommDistributionStatus" $ns
+                    # Bereits beim ersten Datensatz prüfen, ob die XPath-Ausdrücke
+                    # wirklich Inhalte liefern. Sonst wären alle Ergebnisse 0.
+                    if ($stat.Total -eq 1) {
+                        Write-Host "XML Namespace: '$($device.NamespaceURI)'"
+                        Write-Host "Pruefung erstes Geraet: Firma='$company', Identifier=$($ids.Count), Vertrieb='$distributionStatus'"
+                        if ([string]::IsNullOrWhiteSpace($company) -or
+                            $ids.Count -eq 0 -or
+                            [string]::IsNullOrWhiteSpace($distributionStatus)) {
+                            throw 'XML-Felder fehlen: Namespace oder XPath-Schema pruefen.'
+                        }
+                    }
+
                     $hasGs1 = $false
                     $hasHibc = $false
                     $hasPackage = $false
                     $hasPrimary = $false
                     foreach ($id in $ids) {
-                        $agency = Get-ChildText $id './deviceIdIssuingAgency'
-                        $type = Get-ChildText $id './deviceIdType'
+                        $agency = Get-ChildText $id "./${prefix}deviceIdIssuingAgency" $ns
+                        $type = Get-ChildText $id "./${prefix}deviceIdType" $ns
                         if ($agency -eq 'GS1') { $hasGs1 = $true }
                         if ($agency -eq 'HIBCC') { $hasHibc = $true }
                         if ($type -eq 'Package') { $hasPackage = $true }
                         if ($type -eq 'Primary') { $hasPrimary = $true }
                         if ($ids.Count -eq 1 -and $agency -eq 'GS1' -and $type -eq 'Primary') {
-                            if (-not (Test-GS1Checksum (Get-ChildText $id './deviceID'))) {
+                            if (-not (Test-GS1Checksum (Get-ChildText $id "./${prefix}deviceId" $ns))) {
                                 $stat.GS1BadChecksumPrimarySingle++
                             }
                         }
                         if ($agency -eq 'GS1' -and $company -match 'straumann' -and $straumannIds.Count -lt 5) {
-                            $straumannIds.Add((Get-ChildText $id './deviceID'))
+                            $straumannIds.Add((Get-ChildText $id "./${prefix}deviceId" $ns))
                         }
                     }
                     if ($hasGs1) { $stat.GS1++ }
@@ -137,12 +165,12 @@ try {
                     if ($hasPrimary) { $stat.Primary++ }
 
                     if ($hasGs1 -and
-                        (Get-ChildText $device './lotbatch') -eq 'true' -and
-                        (Get-ChildText $device './serialnumber') -eq 'true') {
+                        (Get-ChildText $device "./${prefix}lotBatch" $ns) -eq 'true' -and
+                        (Get-ChildText $device "./${prefix}serialNumber" $ns) -eq 'true') {
                         $stat.GS1LotSerial++
                         $gs1LotSerialManufacturers[$company] = $true
                     }
-                    if ((Get-ChildText $device './deviceCommDistributionStatus') -ne 'In Commercial Distribution') {
+                    if ($distributionStatus -ne 'In Commercial Distribution') {
                         $stat.NotCommercial++
                     }
                     if ($ids.Count -gt 1) { $stat.More1++ }
@@ -152,14 +180,14 @@ try {
                     if ($ids.Count -gt 5) { $stat.More5++ }
 
                     $isTooth = $false
-                    foreach ($codeNode in $device.SelectNodes('./productCodes/fdaProductCode/productCode')) {
+                    foreach ($codeNode in $device.SelectNodes("./${prefix}productCodes/${prefix}fdaProductCode/${prefix}productCode", $ns)) {
                         $code = $codeNode.InnerText.Trim()
                         if ($code.Length -eq 0) { continue }
                         if (-not $codeCompanies.ContainsKey($code)) { $codeCompanies[$code] = @{} }
                         $codeCompanies[$code][$company] = $true
                         if ($code -eq 'ELM') { $isTooth = $true }
                     }
-                    foreach ($gmdnNode in $device.SelectNodes('./gmdnTerms/gmdn/gmdnPTName')) {
+                    foreach ($gmdnNode in $device.SelectNodes("./${prefix}gmdnTerms/${prefix}gmdn/${prefix}gmdnPTName", $ns)) {
                         $gmdn = $gmdnNode.InnerText.Trim()
                         if ($gmdn.Length -eq 0) { continue }
                         if (-not $gmdnCounts.ContainsKey($gmdn)) { $gmdnCounts[$gmdn] = 0 }
@@ -169,17 +197,17 @@ try {
                     if ($isTooth) {
                         $stat.TeethELM++
                         $csvRow = @($company,
-                            (Get-ChildText $device './brandName'),
-                            (Get-ChildText $device './deviceDescription'),
-                            (Get-ChildText $device './catalogNumber'))
+                            (Get-ChildText $device "./${prefix}brandName" $ns),
+                            (Get-ChildText $device "./${prefix}deviceDescription" $ns),
+                            (Get-ChildText $device "./${prefix}catalogNumber" $ns))
                         Write-CsvLine $teethWriter $csvRow
                         if ($company -match 'vita') {
                             $stat.TeethVITA++
                             Write-CsvLine $vitaWriter $csvRow
                         }
                     }
-                    if ((Get-ChildText $device './catalogNumber') -eq '66017316') {
-                        $catalogMatches.Add("$company / $(Get-ChildText $device './brandName') / 66017316")
+                    if ((Get-ChildText $device "./${prefix}catalogNumber" $ns) -eq '66017316') {
+                        $catalogMatches.Add("$company / $(Get-ChildText $device "./${prefix}brandName" $ns) / 66017316")
                     }
                     if (($stat.Total % 100000) -eq 0) {
                         Write-Host "Verarbeitete Geräte: $($stat.Total)"
