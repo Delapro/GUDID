@@ -54,4 +54,13 @@ jobs:
 
       - name: Statistics on Dental XML files
         shell: pwsh
-        run: ./StatisticsDentalXML.PS1
+        run: ./StatisticsDentalXML.ps1
+
+      - name: Upload Statistics
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: Dental-Statistics
+          path: Statistics-Output/*.csv
+          if-no-files-found: warn
+          
