@@ -54,7 +54,7 @@ jobs:
 
       - name: Statistics on Dental XML files
         shell: pwsh
-        run: ./StatisticsDentalXML.ps1
+        run: ./StatisticsDentalXML.PS1
 
       - name: Upload Statistics
         if: always()
