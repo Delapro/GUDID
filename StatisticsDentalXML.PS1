@@ -288,4 +288,15 @@ try {
     }
 }
 finally { $gmdnWriter.Dispose() }
+
+
+"Unterschiedliche GMDN-Terme: $($gmdnCounts.Count)"
+
+$gmdnCounts.GetEnumerator() |
+    Sort-Object Value, Key |
+    Select-Object -First 10 |
+    ForEach-Object {
+        "$($_.Value) : $($_.Key)"
+    }
+
 "Fertig: $outDir"
