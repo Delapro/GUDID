@@ -1,11 +1,15 @@
-"Download FDI FoiClass"
-Start-BitsTransfer http://www.accessdata.fda.gov/premarket/ftparea/foiclass.zip # -OutFile ./foiclass.zip
-"Expand FDI FoiClass"
-Expand-Archive ./foiclass.zip -Verbose
+$ErrorActionPreference = 'Stop'
 
+"Download FDA FoiClass"
+$url = 'https://www.accessdata.fda.gov/premarket/ftparea/foiclass.zip'
+$zipFile = './foiclass.zip'
 # https://www.fda.gov/medical-devices/classify-your-medical-device/download-product-code-classification-files
 # http://www.accessdata.fda.gov/premarket/ftparea/foiclass.zip
-$foi=Import-Csv -Path ./foiclass/foiclass.txt -Delimiter '|'
+Invoke-WebRequest -Uri $url -OutFile $zipFile -ErrorAction Stop
+"Expand FDA FoiClass"
+Expand-Archive -Path $zipFile -DestinationPath './foiclass' -Force
+$foi = Import-Csv -Path './foiclass/foiclass.txt' -Delimiter '|'
+
 $dental = $foi| Where-Object medicalspecialty -eq DE
 $deProdCode = $dental | Select-Object -ExpandProperty ProductCode
 $deProdCodeAnzahl = $deProdCode.Length
