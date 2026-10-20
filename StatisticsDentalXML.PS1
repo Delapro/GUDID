@@ -94,9 +94,10 @@ $stat = [ordered]@{
     Packaging = 0
     Primary = 0
     GS1LotSerial = 0
-    GS1BadChecksumPrimarySingle = 0
-    GS1InvalidLengthPrimarySingle = 0
-    GS1InvalidCharsPrimarySingle = 0
+    GS1PrimaryChecked = 0
+    GS1BadChecksumPrimary = 0
+    GS1InvalidLengthPrimary = 0
+    GS1InvalidCharsPrimary = 0
     BothGS1HIBC = 0
     OnlyGS1 = 0
     OnlyHIBC = 0
@@ -193,15 +194,16 @@ try {
                         if ($agency -eq 'HIBCC') { $hasHibc = $true }
                         if ($type -eq 'Package') { $hasPackage = $true }
                         if ($type -eq 'Primary') { $hasPrimary = $true }
-                        if ($ids.Count -eq 1 -and $agency -eq 'GS1' -and $type -eq 'Primary') {
+                        if ($agency -eq 'GS1' -and $type -eq 'Primary') {
+                            $stat.GS1PrimaryChecked++
                             $di = Get-ChildText $id "./${prefix}deviceId" $ns
                             $digitsOnly = ($di -cmatch '^[0-9]+$')
                             $lengthOk = ($di.Length -in @(8, 12, 13, 14))
                             $checksumOk = Test-GS1Checksum $di
 
-                            if (-not $checksumOk) { $stat.GS1BadChecksumPrimarySingle++ }
-                            if (-not $digitsOnly) { $stat.GS1InvalidCharsPrimarySingle++ }
-                            if (-not $lengthOk) { $stat.GS1InvalidLengthPrimarySingle++ }
+                            if (-not $checksumOk) { $stat.GS1BadChecksumPrimary++ }
+                            if (-not $digitsOnly) { $stat.GS1InvalidCharsPrimary++ }
+                            if (-not $lengthOk) { $stat.GS1InvalidLengthPrimary++ }
 
                             # Schreibe alle auffaelligen DIs auf Platte. Keine GTIN
                             # stillschweigend trimmen oder fuehrende Nullen entfernen.
@@ -328,9 +330,10 @@ if ($stat.Total -eq 0) { throw 'Keine <device>-Elemente gefunden!' }
 "Verarbeitungszeit: $((Get-Date) - $startTime)"
 "Anzahl: $($stat.Total)"
 "GS1 Barcodes: $($stat.GS1)"
-"GS1-DI mit fehlerhafter Pruefsumme (nur einzeln und Primary): $($stat.GS1BadChecksumPrimarySingle)"
-"GS1-DI mit nicht numerischen Zeichen (nur einzeln und Primary): $($stat.GS1InvalidCharsPrimarySingle)"
-"GS1-DI mit ungewoehnlicher Laenge (nur einzeln und Primary): $($stat.GS1InvalidLengthPrimarySingle)"
+"GS1-Primary-DIs geprueft (unabhaengig von weiteren Identifiern): $($stat.GS1PrimaryChecked)"
+"GS1-DI mit fehlerhafter Pruefsumme (alle Primary): $($stat.GS1BadChecksumPrimary)"
+"GS1-DI mit nicht numerischen Zeichen (alle Primary): $($stat.GS1InvalidCharsPrimary)"
+"GS1-DI mit ungewoehnlicher Laenge (alle Primary): $($stat.GS1InvalidLengthPrimary)"
 "GS1-DI-Details: Statistics-Output/GS1-DI-Auffaelligkeiten.csv"
 "HIBC Barcodes: $($stat.HIBC)"
 "GS1 und HIBC (beide): $($stat.BothGS1HIBC)"
@@ -392,14 +395,9 @@ try {
     }
 }
 finally { $gmdnWriter.Dispose() }
-
 "Unterschiedliche GMDN-Terme: $($gmdnCounts.Count)"
-
 $gmdnCounts.GetEnumerator() |
     Sort-Object Value, Key |
     Select-Object -First 10 |
-    ForEach-Object {
-        "$($_.Value) : $($_.Key)"
-    }
-
+    ForEach-Object { "$($_.Value) : $($_.Key)" }
 "Fertig: $outDir"
